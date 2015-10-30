@@ -241,9 +241,9 @@ void SetData()
   Gy = Rgy.getAverage(3);
   Gz = Rgz.getAverage(3);
 
-  Mx = Rgx.getAverage(3);
-  My = Rgy.getAverage(3);
-  Mz = Rgz.getAverage(3);
+  Mx = Rmx.getAverage(3);
+  My = Rmy.getAverage(3);
+  Mz = Rmz.getAverage(3);
 
   Ax = Rax.getAverage(3);
   Ay = Ray.getAverage(3);

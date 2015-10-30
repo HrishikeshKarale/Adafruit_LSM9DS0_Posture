@@ -4,7 +4,7 @@
 //I used Processing more than ver 3.0.
 
 // you wait move sensor until finishing calibration.
-// cubte texture image and real xyz is not same.
+// cube texture image and real xyz is not same.
 // if success, you can see look like https://www.youtube.com/watch?v=ecEN49Y1rZ8
 
 import processing.serial.*;
