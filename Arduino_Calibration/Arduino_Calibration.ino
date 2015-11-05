@@ -128,10 +128,12 @@ void loop(void)
     if (abs(Gz - BGz) < deadZoneGyro) Gz = BGz;
 
 
-    float deadZoneM = 0.7;
+    float deadZoneM = 0.000;
+    float magZCod = 0.05;
+    float magYCod = 0.01;
     if (abs(Mx - BMx) < deadZoneM) Mx = BMx;
-    if (abs(My - BMy) < deadZoneM) My = BMy;
-    if (abs(Mz - BMz) < deadZoneM) Mz = BMz;
+    if (abs(My - BMy) < deadZoneM + magYCod) My = BMy;
+    if (abs(Mz - BMz) < deadZoneM + magZCod) Mz = BMz;
     
     if (abs(Ax) < deadZoneAcc) Ax = 0;
     if (abs(Ay) < deadZoneAcc) Ay = 0;
@@ -142,13 +144,13 @@ void loop(void)
     if (abs(Gz) < deadZoneGyro) Gz = 0;
 
     if (abs(Mx) < deadZoneM) Mx = 0;
-    if (abs(My) < deadZoneM) My = 0;
-    if (abs(Mz) < deadZoneM) Mz = 0;
+    if (abs(My) < deadZoneM + magYCod) My = 0;
+    if (abs(Mz) < deadZoneM + magZCod) Mz = 0; 
 
-
-    Serial.print("A:"); Serial.print(Ax); Serial.print(","); Serial.print(Ay); Serial.print(","); Serial.print(Az); Serial.print("_");
-    Serial.print("M:"); Serial.print(Mx); Serial.print(","); Serial.print(My); Serial.print(","); Serial.print(Mz); Serial.print("_");
-    Serial.print("G:"); Serial.print(Gx); Serial.print(","); Serial.print(Gy); Serial.print(","); Serial.println(Gz);
+   
+    Serial.print("A:"); Serial.print(Ax); Serial.print(","); Serial.print(Ay); Serial.print(","); Serial.print(Az); Serial.print("_"); // m/s^2
+    Serial.print("M:"); Serial.print(Mx); Serial.print(","); Serial.print(My); Serial.print(","); Serial.print(Mz); Serial.print("_"); // gauss
+    Serial.print("G:"); Serial.print(Gx); Serial.print(","); Serial.print(Gy); Serial.print(","); Serial.println(Gz); //dps
     BAx = Ax;
     BAy = Ay;
     BAz = Az;
@@ -205,6 +207,7 @@ void SetData()
     float mx = mag.magnetic.x;
     float my = mag.magnetic.y;
     float mz = mag.magnetic.z;
+
 
     Rgx.add(gx);
     Rgy.add(gy);
