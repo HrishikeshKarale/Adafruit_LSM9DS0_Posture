@@ -4,7 +4,7 @@
 //I used Processing more than ver 3.0.
 
 // you wait move sensor until finishing calibration.
-// cube texture image and real xyz is not same.
+// cube texture impointRatee and real xyz is not same.
 // if success, you can see look like https://www.youtube.com/watch?v=ecEN49Y1rZ8
 
 import processing.serial.*;
@@ -18,12 +18,23 @@ CubeObj g_Cube;
 
 float g_Roll = 0, g_Pitch = 0, g_Yaw = 0;
 
+
+SecondApplet g_second;
+
+void settings()
+{
+  size(640, 360, P3D);
+}
+
+
 void setup()
 {
   String arduinoPort = Serial.list()[0];             
   g_Port = new Serial(this, arduinoPort, 9600);
-  size(640, 360, P3D);
+
+
   g_Cube = new CubeObj();
+  g_second = new SecondApplet(this);
 }
 
 void draw()
@@ -55,7 +66,7 @@ void serialEvent(Serial p)
       {
         SerialData data = GetSerialData(g_SerialLine);
         if (!data.CheckNaN()) return;
-        
+
         //ref http://www.x-io.co.uk/res/doc/madgwick_internal_report.pdf
         float sampleFreq = 512f; //rate of convergence to remove gyroscope measurement errors
         float beta = 0.1f; //zero gyroscope measurement erros 
@@ -73,6 +84,8 @@ void serialEvent(Serial p)
           float now = millis();
           float span = now - g_LastUpdate;
           g_NowQ = updateQ;
+          g_second.UpdateAngle(data, g_Pitch);
+
           g_NowQ.Output();
           println("TimeSpan " + span +  " Roll " + g_Roll + " Pitch " + g_Pitch + " Yaw " + g_Yaw);
           println();
@@ -84,6 +97,8 @@ void serialEvent(Serial p)
     }
   }
 }
+
+
 
 
 
@@ -136,7 +151,7 @@ Quaternion MadgwickAHRS(float sampleFreq, float beta, Quaternion q, SerialData s
   float hx, hy;
   float _2q0mx, _2q0my, _2q0mz, _2q1mx, _2bx, _2bz, _4bx, _4bz, _2q0, _2q1, _2q2, _2q3, _2q0q2, _2q2q3, q0q0, q0q1, q0q2, q0q3, q1q1, q1q2, q1q3, q2q2, q2q3, q3q3;
 
-  // Use IMU algorithm if magnetometer measurement invalid (avoids NaN in magnetometer normalisation)
+  // Use IMU algorithm if mpointRatenetometer measurement invalid (avoids NaN in mpointRatenetometer normalisation)
   if ((mx == 0.0f) && (my == 0.0f) && (mz == 0.0f)) 
   {
     return  MadgwickAHRSupdateIMU(sampleFreq, beta, gx, gy, gz, ax, ay, az, q);
@@ -157,7 +172,7 @@ Quaternion MadgwickAHRS(float sampleFreq, float beta, Quaternion q, SerialData s
     ay *= recipNorm;
     az *= recipNorm;   
 
-    // Normalise magnetometer measurement
+    // Normalise mpointRatenetometer measurement
     recipNorm = 1.0f / sqrt(mx * mx + my * my + mz * mz);
     mx *= recipNorm;
     my *= recipNorm;
@@ -185,7 +200,7 @@ Quaternion MadgwickAHRS(float sampleFreq, float beta, Quaternion q, SerialData s
     q2q3 = q2 * q3;
     q3q3 = q3 * q3;
 
-    // Reference direction of Earth's magnetic field
+    // Reference direction of Earth's mpointRatenetic field
     hx = mx * q0q0 - _2q0my * q3 + _2q0mz * q2 + mx * q1q1 + _2q1 * my * q2 + _2q1 * mz * q3 - mx * q2q2 - mx * q3q3;
     hy = _2q0mx * q3 + my * q0q0 - _2q0mz * q1 + _2q1mx * q2 - my * q1q1 + my * q2q2 + _2q2 * mz * q3 - my * q3q3;
     _2bx = sqrt(hx * hx + hy * hy);
@@ -198,7 +213,7 @@ Quaternion MadgwickAHRS(float sampleFreq, float beta, Quaternion q, SerialData s
     s1 = _2q3 * (2.0f * q1q3 - _2q0q2 - ax) + _2q0 * (2.0f * q0q1 + _2q2q3 - ay) - 4.0f * q1 * (1 - 2.0f * q1q1 - 2.0f * q2q2 - az) + _2bz * q3 * (_2bx * (0.5f - q2q2 - q3q3) + _2bz * (q1q3 - q0q2) - mx) + (_2bx * q2 + _2bz * q0) * (_2bx * (q1q2 - q0q3) + _2bz * (q0q1 + q2q3) - my) + (_2bx * q3 - _4bz * q1) * (_2bx * (q0q2 + q1q3) + _2bz * (0.5f - q1q1 - q2q2) - mz);
     s2 = -_2q0 * (2.0f * q1q3 - _2q0q2 - ax) + _2q3 * (2.0f * q0q1 + _2q2q3 - ay) - 4.0f * q2 * (1 - 2.0f * q1q1 - 2.0f * q2q2 - az) + (-_4bx * q2 - _2bz * q0) * (_2bx * (0.5f - q2q2 - q3q3) + _2bz * (q1q3 - q0q2) - mx) + (_2bx * q1 + _2bz * q3) * (_2bx * (q1q2 - q0q3) + _2bz * (q0q1 + q2q3) - my) + (_2bx * q0 - _4bz * q2) * (_2bx * (q0q2 + q1q3) + _2bz * (0.5f - q1q1 - q2q2) - mz);
     s3 = _2q1 * (2.0f * q1q3 - _2q0q2 - ax) + _2q2 * (2.0f * q0q1 + _2q2q3 - ay) + (-_4bx * q3 + _2bz * q1) * (_2bx * (0.5f - q2q2 - q3q3) + _2bz * (q1q3 - q0q2) - mx) + (-_2bx * q0 + _2bz * q2) * (_2bx * (q1q2 - q0q3) + _2bz * (q0q1 + q2q3) - my) + _2bx * q1 * (_2bx * (q0q2 + q1q3) + _2bz * (0.5f - q1q1 - q2q2) - mz);
-    recipNorm = 1.0f / sqrt(s0 * s0 + s1 * s1 + s2 * s2 + s3 * s3); // normalise step magnitude
+    recipNorm = 1.0f / sqrt(s0 * s0 + s1 * s1 + s2 * s2 + s3 * s3); // normalise step mpointRatenitude
     s0 *= recipNorm;
     s1 *= recipNorm;
     s2 *= recipNorm;
@@ -273,7 +288,7 @@ Quaternion MadgwickAHRSupdateIMU(float sampleFreq, float beta, float gx, float g
     s1 = _4q1 * q3q3 - _2q3 * ax + 4.0f * q0q0 * q1 - _2q0 * ay - _4q1 + _8q1 * q1q1 + _8q1 * q2q2 + _4q1 * az;
     s2 = 4.0f * q0q0 * q2 + _2q0 * ax + _4q2 * q3q3 - _2q3 * ay - _4q2 + _8q2 * q1q1 + _8q2 * q2q2 + _4q2 * az;
     s3 = 4.0f * q1q1 * q3 - _2q1 * ax + 4.0f * q2q2 * q3 - _2q2 * ay;
-    recipNorm = 1.0f / sqrt(s0 * s0 + s1 * s1 + s2 * s2 + s3 * s3); // normalise step magnitude
+    recipNorm = 1.0f / sqrt(s0 * s0 + s1 * s1 + s2 * s2 + s3 * s3); // normalise step mpointRatenitude
     s0 *= recipNorm;
     s1 *= recipNorm;
     s2 *= recipNorm;
@@ -524,5 +539,176 @@ public class CubeObj
     vertex(-1, 1, -1, 0, 1);
 
     endShape();
+  }
+}
+
+class SecondApplet extends PApplet 
+{
+  PApplet parent;
+  //rotation of the z axis center
+  float[] _gyroAngle, _magAngle, _accAngle, _codAngle;
+
+  //nowAngle
+  float   _gyro = 0, _acc = 0, _mag = 0; 
+
+
+  SecondApplet(PApplet _parent) {
+    super();
+    // set parent
+    this.parent = _parent;
+    //// init window
+    try {
+      java.lang.reflect.Method handleSettingsMethod =
+        this.getClass().getSuperclass().getDeclaredMethod("handleSettings", null);
+      handleSettingsMethod.setAccessible(true);
+      handleSettingsMethod.invoke(this, null);
+    } 
+    catch (Exception ex) {
+      ex.printStackTrace();
+    }
+
+    PSurface surface = super.initSurface();
+    surface.placeWindow(new int[]{0, 0}, new int[]{0, 0});
+
+    this.showSurface();
+    this.startSurface();
+  }
+
+  void settings() {
+    size(500, 400);
+  }
+
+  void setup() {
+    frameRate(30);
+    _gyroAngle = new float[width];
+    _magAngle =  new float[width];
+    _accAngle =  new float[width];
+    _codAngle = new float[width];
+  }
+
+  void draw() 
+  {
+    background(0);
+    drawStuff(); //clear drawed windows
+
+    // beginning to avoid overwriting the data
+    for (int i = _gyroAngle.length-1; i > 0; i--) 
+    {
+      _gyroAngle[i] = _gyroAngle[i-1];
+      _magAngle[i] =  _magAngle[i-1];
+      _accAngle[i] = _accAngle[i-1];
+      _codAngle[i] = _codAngle[i-1];
+    }
+    // Add new values to the beginning
+    //plot2[0] = mouseY ;
+    //println(plot2[0]); 
+
+    //value -180 ----- 180;
+    int maxLength = 360;
+    int pointRate = height / maxLength;
+    int fixZero = height/ 2;
+    int dispRValue = -1;
+
+    // Display each pair of values as a line
+    for (int i = 1; i < _gyroAngle.length; i++) 
+    {
+      stroke(255, 0, 0); 
+      line(i, (_gyroAngle[i] * dispRValue  + fixZero) * pointRate, 
+        i-1, (_gyroAngle[i-1] * dispRValue + fixZero) * pointRate);
+
+      stroke(0, 255, 0); 
+      line(i, (_magAngle[i] * dispRValue  + fixZero) * pointRate, 
+        i-1, (_magAngle[i-1] * dispRValue+ fixZero) * pointRate);
+
+      stroke(0, 255, 255); 
+      line(i, (_accAngle[i] * dispRValue  + fixZero) * pointRate, 
+        i-1, (_accAngle[i-1]* dispRValue + fixZero) * pointRate);
+
+      stroke(0, 0, 0); 
+      line(i, (_codAngle[i] * dispRValue  + fixZero) * pointRate, 
+        i-1, (_codAngle[i-1]* dispRValue+ fixZero) * pointRate);
+    }
+  }
+
+  void drawStuff() 
+  {
+    background(255);
+
+    //Legend
+    int lHeight = 20;
+    int skip = 15;
+    text("AccAngle", 50, lHeight);
+    stroke(0, 255, 255);
+    line(10, lHeight - 5, 45, lHeight - 5);
+    lHeight += skip;
+
+    text("GyroAngle", 50, lHeight);
+    stroke(255, 0, 0);
+    line(10, lHeight - 5, 45, lHeight - 5);
+    lHeight += skip;
+
+    text("MagAngle", 50, lHeight);
+    stroke(0, 255, 0);
+    line(10, lHeight - 5, 45, lHeight - 5);
+    lHeight += skip;
+
+    text("Madwick", 50, lHeight);
+    stroke(0, 0, 0);
+    line(10, lHeight - 5, 45, lHeight - 5);
+    lHeight += skip;
+
+    //X Line    
+    for (int i = 0; i <= width; i += 50) 
+    {
+      fill(0, 0, 0);
+      text(i/2, i-10, height-15);
+      stroke(0);
+      line(i, height, i, 0);
+    }
+
+    //Y Line
+    int yIndex = 180;
+    for (int j = 0; j <= height; ) 
+    {
+      fill(0, 0, 0);      
+      int textHeight = j + 10;
+      if (j > height / 2) textHeight = j;
+      text(yIndex, 0, textHeight);
+      stroke(0);
+      line(0, j, width, j);
+      yIndex -= 180;
+      j +=  height / 2 ;
+    }
+  }
+
+  public void  UpdateAngle(SerialData sd, float codPitch)
+  {
+    float gx = sd.GX, gy = sd.GY, gz = sd.GZ; 
+    float ax = sd.AX, ay = sd.AY, az = sd.AZ;
+    float mx = sd.MX, my = sd.MY, mz = sd.MZ;
+    // if(abs(gx) > 0.01 || abs(gy) > 0.01 || abs(gz) > 0.01) println(gx + " " + gy + " " + gz);
+    //println(mx + " " + my + " " + mz);
+
+    float time = 40; //update data time is 40ms  
+    _gyro -=  (gz * time / 1000);
+    _gyroAngle[0] = _gyro;
+    
+    float aAngle =  asin(ay / sqrt(pow(ax, 2) + pow(ay, 2)));  
+    if (!Float.isNaN(aAngle))
+    {
+      //println("ay " + ay + "   ax " + ax + " aAngle " + aAngle);
+      _acc += aAngle;
+      _accAngle[0] = _acc;
+    }
+
+    float mm = my / mx;
+    if (!Float.isNaN(mm))
+    {
+      //println(mx + " " + my + " " + mz + " " + mm + " "  + atan2(mx, my));
+      _mag =  degrees(atan2(my, mx)) ;
+      _magAngle[0] = _mag;
+    }
+    _codAngle[0] = degrees(codPitch);
+    println("FrameRate 30 " + " gAngle " + _gyro + "  aAngle " + _acc + "  mAngle " + _mag + "  codAngle "+  _codAngle[0]);
   }
 }
